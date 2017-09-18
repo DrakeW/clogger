@@ -9,7 +9,7 @@ import (
 )
 
 type MetricsCollector interface {
-	Start() chan Metrics
+	Start()
 	Stop()
 }
 
@@ -31,17 +31,16 @@ func (c *DockerContainer) SetMetricsChan(channel chan Metrics) {
 
 func (c *DockerContainer) Start() {
 	//@todo: Error handling
-	stats, _ := c.ContainerStats(context.Background(), c.ID, true)
-	defer stats.Body.Close()
 	go func() {
 		var buf bytes.Buffer
 		for {
+			//@todo: wtf does stream option do???
+			stats, _ := c.ContainerStats(context.Background(), c.ID, false)
 			buf.ReadFrom(stats.Body)
 			var cStats types.Stats
 			//@todo: Error handling
-			//fmt.Println(string(buf.Bytes()))
 			json.Unmarshal(buf.Bytes(), &cStats)
-			c.metricsChan <- NewMetrics(&cStats, stats.OSType)
+			c.metricsChan <- NewMetrics(c, &cStats, stats.OSType)
 			buf.Reset()
 		}
 	}()

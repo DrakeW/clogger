@@ -18,6 +18,7 @@ func main() {
 		c.Start()
 	}
 	for metrics := range metricsChan {
+		//@todo: json marshalling
 		content, _ := json.Marshal(metrics)
 		sugar.Infof("[Metrics] %s", string(content))
 	}
