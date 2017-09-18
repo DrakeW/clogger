@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/docker/docker/api/types"
 	api "github.com/docker/docker/client"
 )
@@ -20,27 +19,27 @@ type DockerContainer struct {
 	metricsChan chan Metrics // channel used to pass metrics to logger
 }
 
-func dockerContainer(c types.Container) DockerContainer {
-	return DockerContainer{
+func dockerContainer(c types.Container) *DockerContainer {
+	return &DockerContainer{
 		Container: c,
 	}
 }
 
-func (c DockerContainer) SetMetricsChan(channel chan Metrics) {
+func (c *DockerContainer) SetMetricsChan(channel chan Metrics) {
 	c.metricsChan = channel
 }
 
-func (c DockerContainer) Start() {
+func (c *DockerContainer) Start() {
 	//@todo: Error handling
 	stats, _ := c.ContainerStats(context.Background(), c.ID, true)
 	defer stats.Body.Close()
 	go func() {
-		var buf *bytes.Buffer
+		var buf bytes.Buffer
 		for {
-			stats.Body.Read(buf.Bytes())
+			buf.ReadFrom(stats.Body)
 			var cStats types.Stats
 			//@todo: Error handling
-			fmt.Println(string(buf.Bytes()))
+			//fmt.Println(string(buf.Bytes()))
 			json.Unmarshal(buf.Bytes(), &cStats)
 			c.metricsChan <- NewMetrics(&cStats, stats.OSType)
 			buf.Reset()
@@ -48,7 +47,7 @@ func (c DockerContainer) Start() {
 	}()
 }
 
-func GetAllRunningContainers() []DockerContainer {
+func GetAllRunningContainers() []*DockerContainer {
 	cli, err := api.NewEnvClient()
 	if err != nil {
 		panic(err)
@@ -58,7 +57,7 @@ func GetAllRunningContainers() []DockerContainer {
 	if err != nil {
 		panic(err)
 	}
-	dcList := make([]DockerContainer, len(containers), len(containers))
+	dcList := make([]*DockerContainer, 0, len(containers))
 	for _, c := range containers {
 		dc := dockerContainer(c)
 		dc.Client = cli
