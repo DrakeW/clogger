@@ -6,19 +6,19 @@ import (
 )
 
 type Metrics struct {
-	containerId string `json:"cid"`
-	cpu         types.CPUStats
-	memory      types.MemoryStats
-	readTime    time.Time
-	osType      string `json:"os"`
+	ContainerId string `json:"cid"`
+	Cpu         types.CPUStats
+	Memory      types.MemoryStats
+	ReadTime    time.Time
+	OsType      string `json:"os"`
 }
 
 func NewMetrics(c *DockerContainer, stats *types.Stats, osType string) Metrics {
 	return Metrics{
-		containerId: c.ID,
-		cpu:         stats.CPUStats,
-		memory:      stats.MemoryStats,
-		readTime:    stats.Read,
-		osType:      osType,
+		ContainerId: c.ID,
+		Cpu:         stats.CPUStats,
+		Memory:      stats.MemoryStats,
+		ReadTime:    stats.Read,
+		OsType:      osType,
 	}
 }
